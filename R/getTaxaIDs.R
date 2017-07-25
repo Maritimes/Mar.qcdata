@@ -23,7 +23,6 @@
 #' @importFrom ritis search_common
 #' @importFrom taxize itis_acceptname
 #' @importFrom taxize get_wormsid
-#' @importFrom taxizesoap worms_extid
 #' @importFrom jsonlite fromJSON
 #' @family qc
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
@@ -50,11 +49,6 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
   }
 
     proper=function(s) sub("(.)", ("\\U\\1"), tolower(s), perl = TRUE)
-
-    WoRMS2ITIS <- function(searchterm = NULL){
-    this = worms_extid(searchterm, type="tsn")
-    return(this)
-  }
 
   chk_WoRMS <- function(searchterm = NULL, searchtype='scientific', ask=FALSE, verbose=FALSE){
     this = get_wormsid(query=searchterm, searchtype=searchtype, ask=ask, verbose=verbose)
@@ -143,7 +137,10 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
          require(devtools)\n
          install_github('ropensci\\taxizesoap')")
    } else {
-
+     WoRMS2ITIS <- function(searchterm = NULL){
+       this = taxizesoap::worms_extid(searchterm, type="tsn")
+       return(this)
+     }
 
   cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
   potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
