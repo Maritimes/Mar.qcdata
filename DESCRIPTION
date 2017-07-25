@@ -1,17 +1,24 @@
 Package: bio.qcdata
 Type: Package
 Title: Designed to perform QC functions on various Maritimes fisheries science databases
-Version: 2017.06.21
+Version: 2017.07.18
 Author: c( person("Mike", "McMahon", email="Mike.McMahon@dfo-mpo.gc.ca", role=c("aut", "cre")) )
 Maintainer: Mike McMahon <Mike.McMahon@dfo-mpo.gc.ca>
-Description: This package contains severl functions designed to QC various 
+Description: This package contains several functions designed to QC various 
     Maritimes fisheries science databases, including visualizing relationships
     between columns of data, as well as helping identify orphaned records.  
 Imports: 
     bio.datawrangling,
     stats,
     ggplot2,
-    GGally
+    GGally,
+    taxizesoap,
+    jsonlite, 
+    ritis,
+    taxize
+Suggests:
+  RODBC,
+  ROracle
 License: MIT + file LICENSE
 URL: https://github.com/Maritimes/bio.qcdata/
 Encoding: UTF-8

@@ -34,6 +34,9 @@ field, plots the values of other specified fields against eachother.  For
 example, you might QC you catch table by species - in which case, for every
 different species, you might plot the TOTNO vs the TOTWGT.
 }
+\seealso{
+Other qc: \code{\link{getTaxaIDs}}
+}
 \author{
 Mike McMahon, \email{Mike.McMahon@dfo-mpo.gc.ca}
 }
