@@ -134,6 +134,17 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
 
   # merge WoRMS and ITIS results into single dataframe
    spec_list_ID = merge(spec_list_WoRMS, spec_list_ITIS)
+
+   if (requireNamespace("taxizesoap", quietly = TRUE)==FALSE){
+     cat("If you had installed taxizesoap from github, the script would now be
+          attempting to determine ITIS codes using the aphiaids it has already
+          found.  To install if for next time, you would do:\n
+          \n
+         require(devtools)\n
+         install_github('ropensci\\taxizesoap')")
+   } else {
+
+
   cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
   potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
   if (NROW(potential_ITIS)>0){
@@ -145,6 +156,7 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
     if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN) & spec_list_ID$MATCH_ITIS == "not found",])>0)
       spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN) & spec_list_ID$MATCH_ITIS == "not found",]$MATCH_ITIS <-"found"
   }
+   }
   cat("Check that we're using 'accepted' versions of th ITIS IDs\n")
   TSNCheck = data.frame(t(sapply_pb(spec_list_ID[!is.na(spec_list_ID$TSN),]$TSN, itis_acceptname)))
   spec_list_ID = merge(spec_list_ID, TSNCheck[,c("submittedtsn","acceptedtsn","acceptedname")], by.x = "TSN", by.y = "submittedtsn", all.x=TRUE)
