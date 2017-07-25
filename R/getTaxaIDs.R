@@ -18,7 +18,6 @@
 #' @importFrom utils head
 #' @importFrom utils txtProgressBar
 #' @importFrom utils setTxtProgressBar
-#' @importFrom bio.datawrangling make_oracle_cxn
 #' @importFrom ritis search_scientific
 #' @importFrom ritis search_common
 #' @importFrom taxize itis_acceptname
@@ -29,6 +28,7 @@
 #' @export
 getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
 
+  origNames=colnames(spec_list)
 # Functions ---------------------------------------------------------------
   sapply_pb <- function(X, FUN, ...)
   {
@@ -50,6 +50,12 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
 
     proper=function(s) sub("(.)", ("\\U\\1"), tolower(s), perl = TRUE)
 
+  if (requireNamespace("taxizesoap", quietly = TRUE)==TRUE){
+    WoRMS2ITIS <- function(searchterm = NULL){
+      this = taxizesoap::worms_extid(searchterm, type="tsn")
+      return(this)
+    }
+  }
   chk_WoRMS <- function(searchterm = NULL, searchtype='scientific', ask=FALSE, verbose=FALSE){
     this = get_wormsid(query=searchterm, searchtype=searchtype, ask=ask, verbose=verbose)
     this = as.data.frame(cbind(SEARCHTERM = searchterm, APHIAID=as.vector(this),MATCH_WORMS=attr(this,"match"), METHOD_WORMS = searchtype))
@@ -136,10 +142,6 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
          require(devtools)\n
          install_github('ropensci\\taxizesoap')\n")
    } else {
-     WoRMS2ITIS <- function(searchterm = NULL){
-       this = taxizesoap::worms_extid(searchterm, type="tsn")
-       return(this)
-     }
 
   cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
   potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
@@ -181,6 +183,7 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
       spec_list_ID[is.na(spec_list_ID$APHIAID) & !is.na(spec_list_ID$TSN),][i,]$APHIAID<-this
     }
   }
-  #
+  #get column names back into reasonable order
+  spec_list_ID = spec_list_ID[,c(origNames,colnames(spec_list_ID[,(!colnames(spec_list_ID) %in% origNames)]))]
   return(spec_list_ID)
 }
