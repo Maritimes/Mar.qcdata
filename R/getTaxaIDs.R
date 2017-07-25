@@ -133,9 +133,8 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
      cat("If you had installed taxizesoap from github, the script would now be
           attempting to determine ITIS codes using the aphiaids it has already
           found.  To install if for next time, you would do:\n
-          \n
          require(devtools)\n
-         install_github('ropensci\\taxizesoap')")
+         install_github('ropensci\\taxizesoap')\n")
    } else {
      WoRMS2ITIS <- function(searchterm = NULL){
        this = taxizesoap::worms_extid(searchterm, type="tsn")
