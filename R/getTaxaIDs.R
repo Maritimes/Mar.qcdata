@@ -27,8 +27,8 @@
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
 getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
-
-  origNames=colnames(spec_list)
+  df_imp<-spec_list[,c(sci_col, comm_col)]
+  df_res<-spec_list
 
   hasTS=FALSE
   if (requireNamespace("taxizesoap", quietly = T)==TRUE){
@@ -56,10 +56,10 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
 
     proper=function(s) sub("(.)", ("\\U\\1"), tolower(s), perl = TRUE)
     if (hasTS){
-    WoRMS2ITIS <- function(searchterm = NULL){
-      this = taxizesoap::worms_extid(searchterm, type="tsn")
-      return(this)
-    }
+      WoRMS2ITIS <- function(searchterm = NULL){
+        this = taxizesoap::worms_extid(searchterm, type="tsn")
+        return(this)
+      }
     }
   chk_WoRMS <- function(searchterm = NULL, searchtype='scientific', ask=FALSE, verbose=FALSE){
     this = taxize::get_wormsid(query=searchterm, searchtype=searchtype, ask=ask, verbose=verbose)
@@ -94,51 +94,53 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
   }
 
 # Processing Steps --------------------------------------------------------
-  spec_list[,sci_col] = proper(spec_list[,sci_col])
-
+    df_imp[,sci_col] = proper(df_imp[,sci_col])
   # WoRMS
   # check for matches based on sci name, then common name, then combine results
   cat("Checking WoRMS for Scientific names\n")
-  chk_WoRMSspec_list_sci = as.data.frame(t(sapply_pb(spec_list[,sci_col],chk_WoRMS)))
+  chk_WoRMSspec_list_sci = as.data.frame(t(sapply_pb(df_imp[,sci_col],chk_WoRMS)))
   chk_WoRMSspec_list_sci = chk_WoRMSspec_list_sci[!chk_WoRMSspec_list_sci$MATCH=="not found",]
-  if (NROW(chk_WoRMSspec_list_sci) < NROW(spec_list)){
+  if (NROW(chk_WoRMSspec_list_sci) < NROW(df_imp)){
     cat("Checking WoRMS for common names\n")
-    chk_WoRMSspec_list_comm = as.data.frame(t(sapply_pb(spec_list[!(spec_list[,sci_col] %in% chk_WoRMSspec_list_sci$SEARCHTERM),][,comm_col],chk_WoRMS, searchtype="common")))
-    #chk_WoRMSspec_list_comm = chk_WoRMS(searchterm = spec_list[!(spec_list[,sci_col] %in% chk_WoRMSspec_list_sci$SEARCHTERM),][,comm_col], searchtype="common")
+    chk_WoRMSspec_list_comm = as.data.frame(t(sapply_pb(df_imp[!(df_imp[,sci_col] %in% chk_WoRMSspec_list_sci$SEARCHTERM),][,comm_col],chk_WoRMS, searchtype="common")))
   }
-  spec_list_WoRMS = merge(spec_list, chk_WoRMSspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM")
+
+  spec_list_WoRMS = merge(df_imp, chk_WoRMSspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM")
   if (exists("chk_WoRMSspec_list_comm")){
-    spec_list_WoRMS = rbind(spec_list_WoRMS, merge(spec_list, chk_WoRMSspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM"))
+    spec_list_WoRMS = rbind(spec_list_WoRMS, merge(df_imp, chk_WoRMSspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM"))
   }
-  spec_list_WoRMS = data.frame("SPEC"=spec_list_WoRMS$SPEC,
-                               "SPECIES"=spec_list_WoRMS$SPECIES,
-                               "COMM"=spec_list_WoRMS$COMM,
+
+  spec_list_WoRMS = data.frame("tmp1" = spec_list_WoRMS[,sci_col],
+                               "tmp2" = spec_list_WoRMS[,comm_col],
                                "APHIAID"=unlist(spec_list_WoRMS$APHIAID),
                                "MATCH_WORMS"=unlist(spec_list_WoRMS$MATCH_WORMS ),
                                "METHOD_WORMS"=unlist(spec_list_WoRMS$METHOD_WORMS))
+  names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp1"] <- sci_col
+  names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp2"] <- comm_col
   # ITIS
   # check for matches based on sci name, then common name
   cat("Checking ITIS for Scientific names\n")
-  chk_ITISspec_list_sci = as.data.frame(t(sapply_pb(spec_list[,sci_col],chk_ITIS)))
+  chk_ITISspec_list_sci = as.data.frame(t(sapply_pb(df_imp[,sci_col],chk_ITIS)))
   chk_ITISspec_list_sci = chk_ITISspec_list_sci[!chk_ITISspec_list_sci$MATCH=="not found",]
-  if (NROW(chk_ITISspec_list_sci) < NROW(spec_list)){
+  if (NROW(chk_ITISspec_list_sci) < NROW(df_imp)){
     cat("Checking ITIS for common names\n")
-    chk_ITISspec_list_comm = as.data.frame(t(sapply_pb(spec_list[!spec_list[,sci_col] %in% chk_ITISspec_list_sci$SEARCHTERM,][,comm_col],chk_ITIS, searchtype="common")))
-    #chk_ITISspec_list_comm = chk_ITIS(searchterm = spec_list[!spec_list[,sci_col] %in% chk_ITISspec_list_sci$SEARCHTERM,][,comm_col], searchtype="common")
+       chk_ITISspec_list_comm = as.data.frame(t(sapply_pb(df_imp[!(df_imp[,sci_col] %in% chk_ITISspec_list_sci$SEARCHTERM),][,comm_col],chk_ITIS, searchtype="common")))
   }
-     spec_list_ITIS = merge(spec_list, chk_ITISspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM")
+     spec_list_ITIS = merge(df_imp, chk_ITISspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM")
   if (exists("chk_ITISspec_list_comm")){
-    spec_list_ITIS = rbind(spec_list_ITIS, merge(spec_list, chk_ITISspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM"))
+    spec_list_ITIS = rbind(spec_list_ITIS, merge(df_imp, chk_ITISspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM"))
   }
-     spec_list_ITIS = data.frame("SPEC"=spec_list_ITIS$SPEC,
-                                  "SPECIES"=spec_list_ITIS$SPECIES,
-                                  "COMM"=spec_list_ITIS$COMM,
+
+     spec_list_ITIS = data.frame("tmp1"=spec_list_ITIS[,sci_col],
+                                  "tmp2"=spec_list_ITIS[,comm_col],
                                   "TSN"=unlist(spec_list_ITIS$TSN),
                                   "MATCH_ITIS"=unlist(spec_list_ITIS$MATCH_ITIS ),
                                   "METHOD_ITIS"=unlist(spec_list_ITIS$METHOD_ITIS))
-
+     names(spec_list_ITIS)[names(spec_list_ITIS) == "tmp1"] <- sci_col
+     names(spec_list_ITIS)[names(spec_list_ITIS) == "tmp2"] <- comm_col
   # merge WoRMS and ITIS results into single dataframe
-   spec_list_ID = merge(spec_list_WoRMS, spec_list_ITIS)
+
+   spec_list_ID = merge(spec_list_WoRMS, spec_list_ITIS )
    if (hasTS){
       cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
       potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
@@ -185,7 +187,8 @@ To install install taxizesoap from github, do the following:\n
       spec_list_ID[is.na(spec_list_ID$APHIAID) & !is.na(spec_list_ID$TSN),][i,]$APHIAID<-this
     }
   }
-  #get column names back into reasonable order
-  spec_list_ID = spec_list_ID[,c(origNames,colnames(spec_list_ID[,(!colnames(spec_list_ID) %in% origNames)]))]
+
+  spec_list_ID[,sci_col]<-toupper(spec_list_ID[,sci_col])
+  spec_list_ID <- merge(df_res, spec_list_ID)
   return(spec_list_ID)
 }
