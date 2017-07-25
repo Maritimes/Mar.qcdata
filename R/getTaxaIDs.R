@@ -49,15 +49,14 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
   }
 
     proper=function(s) sub("(.)", ("\\U\\1"), tolower(s), perl = TRUE)
-
-  if (requireNamespace("taxizesoap", quietly = TRUE)==TRUE){
+    if (requireNamespace("taxizesoap", quietly = T)==TRUE){
     WoRMS2ITIS <- function(searchterm = NULL){
       this = taxizesoap::worms_extid(searchterm, type="tsn")
       return(this)
     }
-  }
+    }
   chk_WoRMS <- function(searchterm = NULL, searchtype='scientific', ask=FALSE, verbose=FALSE){
-    this = get_wormsid(query=searchterm, searchtype=searchtype, ask=ask, verbose=verbose)
+    this = taxize::get_wormsid(query=searchterm, searchtype=searchtype, ask=ask, verbose=verbose)
     this = as.data.frame(cbind(SEARCHTERM = searchterm, APHIAID=as.vector(this),MATCH_WORMS=attr(this,"match"), METHOD_WORMS = searchtype))
     if (NROW(this[this$MATCH_WORMS=="not found",])>0) this[this$MATCH_WORMS=="not found",]$METHOD_WORMS<-NA
     if (NROW(this[this$MATCH_WORMS=="NA due to ask=FALSE",])>0) this[this$MATCH_WORMS=="NA due to ask=FALSE",]$MATCH_WORMS<-"multi match"
@@ -134,26 +133,23 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
 
   # merge WoRMS and ITIS results into single dataframe
    spec_list_ID = merge(spec_list_WoRMS, spec_list_ITIS)
-
-   if (requireNamespace("taxizesoap", quietly = TRUE)==FALSE){
-     cat("If you had installed taxizesoap from github, the script would now be
-          attempting to determine ITIS codes using the aphiaids it has already
-          found.  To install if for next time, you would do:\n
-         require(devtools)
-         install_github('ropensci\\taxizesoap')\n")
-   } else {
-
-  cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
-  potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
-  if (NROW(potential_ITIS)>0){
-    spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID,]$TSN<-sapply_pb(potential_ITIS$APHIAID, WoRMS2ITIS)
-    if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & spec_list_ID$TSN =="",])>0)
-      spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & spec_list_ID$TSN =="",]$TSN <- NA
-    if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN),])>0)
-      spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN),]$METHOD_ITIS <- "from aphiaid"
-    if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN) & spec_list_ID$MATCH_ITIS == "not found",])>0)
-      spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN) & spec_list_ID$MATCH_ITIS == "not found",]$MATCH_ITIS <-"found"
-  }
+   if (requireNamespace("taxizesoap", quietly = T)==TRUE){
+      cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
+      potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
+      if (NROW(potential_ITIS)>0){
+        spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID,]$TSN<-sapply_pb(potential_ITIS$APHIAID, WoRMS2ITIS)
+        if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & spec_list_ID$TSN =="",])>0)
+          spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & spec_list_ID$TSN =="",]$TSN <- NA
+        if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN),])>0)
+          spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN),]$METHOD_ITIS <- "from aphiaid"
+        if (NROW(spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN) & spec_list_ID$MATCH_ITIS == "not found",])>0)
+          spec_list_ID[spec_list_ID$APHIAID %in% potential_ITIS$APHIAID & !is.na(spec_list_ID$TSN) & spec_list_ID$MATCH_ITIS == "not found",]$MATCH_ITIS <-"found"
+      }
+   }else{
+     cat("\nIf you had the taxizesoap package installed, the script would try to find ITIS tsns from the WoRMS aphiaIDs it found at this point.
+To install install taxizesoap from github, do the following:\n
+   require(devtools)
+   install_github('ropensci\\taxizesoap')\n\n")
    }
   cat("Check that we're using 'accepted' versions of th ITIS IDs\n")
   TSNCheck = data.frame(t(sapply_pb(spec_list_ID[!is.na(spec_list_ID$TSN),]$TSN, itis_acceptname)))
