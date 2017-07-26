@@ -105,40 +105,44 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
   # check for matches based on sci name, then common name (if provided)
   cat("Checking WoRMS for Scientific names\n")
   chk_WoRMSspec_list_sci = as.data.frame(t(sapply_pb(df_imp[,sci_col],chk_WoRMS)))
-  chk_WoRMSspec_list_sci = chk_WoRMSspec_list_sci[!chk_WoRMSspec_list_sci$MATCH=="not found",]
+  chk_WoRMSspec_list_sci_miss = chk_WoRMSspec_list_sci[!chk_WoRMSspec_list_sci$MATCH=="not found",]
 
-  if (!is.null(comm_col) & NROW(chk_WoRMSspec_list_sci) < NROW(df_imp)){
-    cat("Checking WoRMS for common names\n")
-    chk_WoRMSspec_list_comm = as.data.frame(t(sapply_pb(df_imp[!(df_imp[,sci_col] %in% chk_WoRMSspec_list_sci$SEARCHTERM),][,comm_col],chk_WoRMS, searchtype="common")))
-    chk_WoRMSspec_list_comm = merge(df_imp, chk_WoRMSspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM")
-    spec_list_WoRMS = merge(df_imp, chk_WoRMSspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM", all.x=TRUE)
-    spec_list_WoRMS = rbind(spec_list_WoRMS, chk_WoRMSspec_list_comm)
-    spec_list_WoRMS = data.frame("tmp1" = spec_list_WoRMS[,sci_col],
-                                 "tmp2" = spec_list_WoRMS[,comm_col],
-                                 "APHIAID"=unlist(spec_list_WoRMS$APHIAID),
-                                 "MATCH_WORMS"=unlist(spec_list_WoRMS$MATCH_WORMS ),
-                                 "METHOD_WORMS"=unlist(spec_list_WoRMS$METHOD_WORMS))
-    names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp1"] <- sci_col
-    names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp2"] <- comm_col
+  if (NROW(chk_WoRMSspec_list_sci_miss)>0){
+    if (!is.null(comm_col)) {
+      cat("Checking WoRMS for common names\n")
+      chk_WoRMSspec_list_comm = as.data.frame(t(sapply_pb(chk_WoRMSspec_list_sci_miss$SEARCHTERM, chk_WoRMS, searchtype="common")))
+      chk_WoRMSspec_list_comm = merge(df_imp, chk_WoRMSspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM")
+      spec_list_WoRMS = merge(df_imp, chk_WoRMSspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM", all.x=TRUE)
+      spec_list_WoRMS = rbind(spec_list_WoRMS, chk_WoRMSspec_list_comm)
+      spec_list_WoRMS = data.frame("tmp1" = spec_list_WoRMS[,sci_col],
+                                   "tmp2" = spec_list_WoRMS[,comm_col],
+                                   "APHIAID"=unlist(spec_list_WoRMS$APHIAID),
+                                   "MATCH_WORMS"=unlist(spec_list_WoRMS$MATCH_WORMS ),
+                                   "METHOD_WORMS"=unlist(spec_list_WoRMS$METHOD_WORMS))
+      names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp1"] <- sci_col
+      names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp2"] <- comm_col
+    }else{
+      spec_list_WoRMS = merge(df_imp, chk_WoRMSspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM", all.x=TRUE)
+      spec_list_WoRMS = data.frame("tmp1" = spec_list_WoRMS[,sci_col],
+                                   "APHIAID"=unlist(spec_list_WoRMS$APHIAID),
+                                   "MATCH_WORMS"=unlist(spec_list_WoRMS$MATCH_WORMS ),
+                                   "METHOD_WORMS"=unlist(spec_list_WoRMS$METHOD_WORMS))
+      names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp1"] <- sci_col
+    }
   }else{
     spec_list_WoRMS = merge(df_imp, chk_WoRMSspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM", all.x=TRUE)
-    spec_list_WoRMS = data.frame("tmp1" = spec_list_WoRMS[,sci_col],
-                                 "APHIAID"=unlist(spec_list_WoRMS$APHIAID),
-                                 "MATCH_WORMS"=unlist(spec_list_WoRMS$MATCH_WORMS ),
-                                 "METHOD_WORMS"=unlist(spec_list_WoRMS$METHOD_WORMS))
-    names(spec_list_WoRMS)[names(spec_list_WoRMS) == "tmp1"] <- sci_col
   }
-
 
   # ITIS
   # check for matches based on sci name, then common name (if provided)
   cat("Checking ITIS for Scientific names\n")
   chk_ITISspec_list_sci = as.data.frame(t(sapply_pb(df_imp[,sci_col],chk_ITIS)))
-  chk_ITISspec_list_sci = chk_ITISspec_list_sci[!chk_ITISspec_list_sci$MATCH=="not found",]
+  chk_ITISspec_list_sci_miss = chk_ITISspec_list_sci[!chk_ITISspec_list_sci$MATCH=="not found",]
 
-  if (!is.null(comm_col) & NROW(chk_ITISspec_list_sci) < NROW(df_imp)){
+  if (NROW(chk_ITISspec_list_sci_miss)>0){
+    if (!is.null(comm_col)) {
       cat("Checking ITIS for common names\n")
-      chk_ITISspec_list_comm = as.data.frame(t(sapply_pb(df_imp[!(df_imp[,sci_col] %in% chk_ITISspec_list_sci$SEARCHTERM),][,comm_col],chk_ITIS, searchtype="common")))
+      chk_ITISspec_list_comm = as.data.frame(t(sapply_pb(chk_ITISspec_list_sci_miss$SEARCHTERM, chk_ITIS, searchtype="common")))
       chk_ITISspec_list_comm = merge(df_imp, chk_ITISspec_list_comm, by.x = comm_col, by.y = "SEARCHTERM")
       spec_list_ITIS = merge(df_imp, chk_ITISspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM", all.x=TRUE)
       spec_list_ITIS = rbind(spec_list_ITIS, chk_ITISspec_list_comm)
@@ -157,8 +161,14 @@ getTaxaIDs <- function(spec_list=NULL, sci_col=NULL, comm_col=NULL){
                                 "METHOD_ITIS"=unlist(spec_list_ITIS$METHOD_ITIS))
     names(spec_list_ITIS)[names(spec_list_ITIS) == "tmp1"] <- sci_col
   }
-  # merge WoRMS and ITIS results into single dataframe
-   spec_list_ID <- merge(spec_list_WoRMS, spec_list_ITIS )
+  }else{
+    spec_list_ITIS = merge(df_imp, chk_ITISspec_list_sci, by.x = sci_col, by.y = "SEARCHTERM", all.x=TRUE)
+  }
+  # spec_list_WoRMS_keep<<-spec_list_WoRMS
+  # spec_list_ITIS_keep<<-spec_list_ITIS
+  # browser()
+   spec_list_ID <- merge(spec_list_WoRMS, spec_list_ITIS, by=c(sci_col, comm_col))
+
    if (hasTS){
       cat("Trying to find missing ITIS IDs using found WoRMS IDs...\n")
       potential_ITIS = spec_list_ID[!is.na(spec_list_ID$APHIAID) & is.na(spec_list_ID$TSN),]
