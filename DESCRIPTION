@@ -1,4 +1,4 @@
-Package: bio.qcdata
+Package: qcdata
 Type: Package
 Title: Designed to perform QC functions on various Maritimes fisheries science databases
 Version: 2017.07.25
