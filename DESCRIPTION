@@ -1,4 +1,4 @@
-Package: qcdata
+Package: Mar.qcdata
 Type: Package
 Title: Designed to perform QC functions on various Maritimes fisheries science databases
 Version: 2017.07.25
@@ -8,7 +8,6 @@ Description: This package contains several functions designed to QC various
     Maritimes fisheries science databases, including visualizing relationships
     between columns of data, as well as helping identify orphaned records.  
 Imports: 
-    bio.datawrangling,
     stats,
     ggplot2,
     GGally,
@@ -20,7 +19,7 @@ Suggests:
   ROracle,
   taxizesoap
 License: MIT + file LICENSE
-URL: https://github.com/Maritimes/bio.qcdata/
+URL: https://github.com/Maritimes/Mar.qcdata/
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1

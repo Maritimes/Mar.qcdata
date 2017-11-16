@@ -2,11 +2,7 @@
 
 export(getTaxaIDs)
 export(qc_fieldvalues)
-export(qc_findorphans)
 importFrom(GGally,ggpairs)
-importFrom(bio.datawrangling,get_data)
-importFrom(bio.datawrangling,load_datasources)
-importFrom(bio.datawrangling,self_filter)
 importFrom(ggplot2,geom_point)
 importFrom(ggplot2,geom_smooth)
 importFrom(ggplot2,ggplot)
