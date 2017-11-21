@@ -2,6 +2,8 @@
 
 export(getTaxaIDs)
 export(qc_fieldvalues)
+export(uniqueValuesPerField)
+importFrom("",)
 importFrom(GGally,ggpairs)
 importFrom(ggplot2,geom_point)
 importFrom(ggplot2,geom_smooth)
