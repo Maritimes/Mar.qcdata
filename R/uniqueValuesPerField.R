@@ -28,7 +28,6 @@
 #' values found in each, as well as the number of records for each unique value.
 #' Fields that were found to be either unique (i.e. every value different) or 
 #' uniform (i.e. every value the same) will be dropped.
-#' @importFrom 
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
 uniqueValuesPerField <-function(df,
