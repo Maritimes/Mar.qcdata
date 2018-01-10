@@ -7,6 +7,7 @@
 #' indicates that it is within a reasonable range of the mean.
 #' @param df a dataframe to be analyzed.
 #' @param field a fieldname within the df to be analyzed.
+#' @importFrom grDevices boxplot.stats
 #' @return the df, with an additional field - "OL_<field>".
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
