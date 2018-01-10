@@ -2,6 +2,7 @@
 
 export(getTaxaIDs)
 export(qc_fieldvalues)
+export(qc_outlierCheck)
 export(uniqueValuesPerField)
 importFrom(GGally,ggpairs)
 importFrom(ggplot2,geom_point)
